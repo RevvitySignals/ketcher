@@ -386,7 +386,7 @@ function getElementsInPolygon(restruct: ReStruct, rr) {
 
 // TODO: test me see testPolygon from
 // 'Remove unused methods from render' commit
-function isPointInPolygon(r, p) {
+export function isPointInPolygon(r, p) {
   // eslint-disable-line max-statements
   const d = new Vec2(0, 1);
   const n = d.rotate(Math.PI / 2);

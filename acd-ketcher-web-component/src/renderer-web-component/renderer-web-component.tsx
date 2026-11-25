@@ -11,6 +11,7 @@ import {
   Struct,
   MeasurementUnits,
 } from 'ketcher-core';
+import { isPointInPolygon } from 'ketcher-react';
 import {
   IKCAtomDecoration,
   IKCArrow,
@@ -610,6 +611,19 @@ export class RendererWebComponent extends HTMLElement implements IKCRenderer {
     }
 
     return atomInfoId;
+  }
+
+  public getAtomIdsInsidePolygon(polygon: IKCPoint[]): string[] {
+    const atomIds: string[] = [];
+
+    this.mAtomsInfo?.forEach((atomInfo) => {
+      const atomPoint = this.getCenterAtomByIndex(atomInfo.index);
+      if (atomPoint && isPointInPolygon(polygon, atomPoint)) {
+        atomIds.push(atomInfo.id);
+      }
+    });
+
+    return atomIds;
   }
 
   public atomPointed(atomId: IKCNullable<string>): void {

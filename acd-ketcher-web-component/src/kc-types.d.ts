@@ -82,7 +82,6 @@ export interface IKCRenderer extends HTMLElement {
   atomsDecorations: IKCNullable<IKCAtomDecorationMap>;
   corrArrowsInfo: IKCNullable<IKCArrow[]>;
   highlightedAtoms: IKCNullable<string[]>;
-  isHighlightActive: IKCNullable<boolean>;
   fixStructureSize: IKCNullable<boolean>;
   /**
    * fixStructureMinSize - boolean flag that toggles limitation for structure to be resized
@@ -122,6 +121,7 @@ export interface IKCRenderer extends HTMLElement {
   ): IKCNullable<IKCPoint>;
   getAtomId(position: IKCPoint): IKCNullable<string>;
   atomPointed(atomId: IKCNullable<string>): void;
+  getAtomIdsInsidePolygon(polygon: IKCPoint[]): string[];
 }
 
 export const enum KCFormat {

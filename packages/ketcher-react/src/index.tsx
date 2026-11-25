@@ -27,3 +27,4 @@ export { couldBeSaved } from './script/ui/data/convert/structConverter';
 
 export { ElementsTable };
 export { AtomInfo };
+export { isPointInPolygon } from './script/editor/tool/helper/locate';
