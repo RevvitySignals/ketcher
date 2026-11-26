@@ -324,4 +324,112 @@ describe('KetcherRendererWebComponent', () => {
     // await result.saveToFile('catechin-with-zero-sphere-on-skel-hl');
     expect(result.misMatchPercentage).toBeLessThanOrEqual(COMPARISON_THRESHOLD);
   });
+
+  describe('getAtomIdsInsidePolygon', () => {
+    const square = (cx: number, cy: number, half: number) => [
+      { x: cx - half, y: cy - half },
+      { x: cx + half, y: cy - half },
+      { x: cx + half, y: cy + half },
+      { x: cx - half, y: cy + half },
+    ];
+
+    const getCenter = (index: number) => {
+      const center = element.getCenterAtomByIndex(index);
+      if (!center) {
+        throw new Error(`No center for atom ${index}`);
+      }
+      return center;
+    };
+
+    it('should return empty array if atoms info is not set', () => {
+      element = createComponent();
+
+      expect(element.getAtomIdsInsidePolygon(square(0, 0, 10000))).toEqual([]);
+    });
+
+    it('should return ids of all atoms if polygon covers the whole structure', async () => {
+      element = createComponent();
+      await renderStructure(element, catechinAssigned.testData.model);
+
+      const ids = element.getAtomIdsInsidePolygon(square(0, 0, 100000));
+
+      const expectedIds = (element.atomsInfo ?? []).map((info) => info.id);
+      expect(expectedIds.length).toBeGreaterThan(0);
+      expect([...ids].sort()).toEqual([...expectedIds].sort());
+    });
+
+    it('should return empty array if polygon is far from the structure', async () => {
+      element = createComponent();
+      await renderStructure(element, catechinAssigned.testData.model);
+
+      expect(element.getAtomIdsInsidePolygon(square(-50000, -50000, 10))).toEqual([]);
+    });
+
+    it('should return only the atom under a small polygon', async () => {
+      element = createComponent();
+      await renderStructure(element, catechinAssigned.testData.model);
+      const atomIndex = 3;
+      const center = getCenter(atomIndex);
+
+      const ids = element.getAtomIdsInsidePolygon(square(center.x, center.y, 2));
+
+      const expectedIds = (element.atomsInfo ?? [])
+        .filter((info) => info.index === atomIndex)
+        .map((info) => info.id);
+      expect(expectedIds.length).toBeGreaterThan(0);
+      expect(ids).toEqual(expectedIds);
+    });
+
+    it('should return all ids that share the same atom index', async () => {
+      element = createComponent();
+      await renderStructure(element, {
+        ...catechinAssigned.testData.model,
+        atomsInfo: [
+          { id: 'a', index: 3, label: 'C' },
+          { id: 'b', index: 3, label: 'C' },
+          { id: 'c', index: 4, label: 'C' },
+        ],
+      });
+      const center = getCenter(3);
+
+      const ids = element.getAtomIdsInsidePolygon(square(center.x, center.y, 2));
+
+      expect(ids).toEqual(['a', 'b']);
+    });
+
+    it('should not include atoms outside of the polygon', async () => {
+      element = createComponent();
+      await renderStructure(element, catechinAssigned.testData.model);
+      const inside = getCenter(3);
+      const outside = getCenter(4);
+
+      const ids = element.getAtomIdsInsidePolygon(square(inside.x, inside.y, 2));
+
+      const outsideIds = (element.atomsInfo ?? [])
+        .filter((info) => info.index === 4)
+        .map((info) => info.id);
+      expect(outside).not.toEqual(inside);
+      for (const id of outsideIds) {
+        expect(ids).not.toContain(id);
+      }
+    });
+
+    it('should work with a non-rectangular polygon', async () => {
+      element = createComponent();
+      await renderStructure(element, catechinAssigned.testData.model);
+      const center = getCenter(3);
+      const triangle = [
+        { x: center.x - 3, y: center.y + 3 },
+        { x: center.x + 3, y: center.y + 3 },
+        { x: center.x, y: center.y - 3 },
+      ];
+
+      const ids = element.getAtomIdsInsidePolygon(triangle);
+
+      const expectedIds = (element.atomsInfo ?? [])
+        .filter((info) => info.index === 3)
+        .map((info) => info.id);
+      expect(ids).toEqual(expectedIds);
+    });
+  });
 });
